@@ -1,36 +1,87 @@
 import React, { useState } from "react";
-import Link from "next/link"; // Import Link for navigation
+import Link from "next/link";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 function RegisterPatient() {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate passwords
     if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+      setErrorMessage("Passwords do not match.");
       return;
     }
-    // Handle registration logic here
-    console.log("Patient Registered:", { name, email, password });
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      // Clear any existing error message
+      setErrorMessage("");
+
+      // Make an API request to register the patient
+      const response = await axios.post("http://localhost:5000/api/register", {
+        firstName,
+        lastName,
+        email,
+        password,
+      });
+
+      alert("Registration successful! Please log in.");
+      router.push("/login-patient"); // Redirect to login page
+    } catch (error) {
+      console.error("Registration failed:", error);
+      setErrorMessage("Registration failed. Please try again.");
+    }
   };
 
   return (
     <div className="container mx-auto my-10 p-8 shadow-lg max-w-md">
       <h2 className="text-2xl font-semibold mb-6">Register as a Patient</h2>
+      {errorMessage && (
+        <div className="mb-4 text-red-600 text-sm font-medium">{errorMessage}</div>
+      )}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium">
-            Full Name
+          <label htmlFor="firstName" className="block text-sm font-medium">
+            First Name
           </label>
           <input
             type="text"
-            id="name"
+            id="firstName"
             className="w-full p-2 border border-gray-300 rounded-md"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="lastName" className="block text-sm font-medium">
+            Last Name
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            className="w-full p-2 border border-gray-300 rounded-md"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             required
           />
         </div>
